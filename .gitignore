@@ -52,5 +52,5 @@ Mkfile.old
 dkms.conf
 
 # Files
-.mp4
-.pgm
+*.mp4
+*.pgm
