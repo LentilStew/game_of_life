@@ -50,7 +50,7 @@ char *upscale(char *grid, int in_width, int in_height, int times)
 
 typedef struct _upscale_params
 {
-    char *old_grid;
+    const char *old_grid;
     char *new_grid;
     int in_width;
     int in_height;
@@ -59,11 +59,11 @@ typedef struct _upscale_params
 
 void *_upscale(void *params);
 
-#define THREADS 1
+#define THREADS 12
 pthread_t threads[THREADS];
 _upscale_params *params[THREADS];
 
-char *upscale_th(char *grid, int in_width, int in_height, int times)
+char *upscale_th(const char *grid, int in_width, int in_height, int times)
 {
     char *new_grid = calloc(sizeof(char), in_width * times * in_height * times);
 
