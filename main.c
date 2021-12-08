@@ -57,24 +57,24 @@ int main()
 
     int res;
     grid *grid1 = build_grid(100, 100);
-
-    fill_grid_with_LFSR(grid1->grid, grid1->width, grid1->height, lrand());
+    char *upscaled_grid;
+    int times = 6;
+    fill_grid_with_LFSR(grid1->grid, grid1->width, grid1->height, 0xFFAA465AF);
     /*
     grid1->grid[(20) * grid1->width + 85 + 1] = 1;
     grid1->grid[(20 + 1) * grid1->width + 85] = 1;
     grid1->grid[(20 + 1) * grid1->width + 85 + 1] = 1;
     grid1->grid[(20 + 2) * grid1->width + 85 + 1] = 1;
     grid1->grid[(20) * grid1->width + 85 + 2] = 1;
-    */
+*/
     int counter = 0;
 
-    while (counter < 1600)
+    while (counter < 10020)
     {
         counter++;
-
-        save_gray_frame(grid1->grid, grid1->width, grid1->height);
-
-        //sleep(1);
+        printf("%i\n",counter);
+        upscaled_grid = upscale(grid1->grid, grid1->width, grid1->height, times);
+        free(upscaled_grid);
 
         res = update_grid(grid1);
 
