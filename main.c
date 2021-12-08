@@ -9,6 +9,8 @@ typedef struct grid
     int width;
     int height;
     u_int8_t *grid;
+    int *white_cells;
+    int white_cells_len;
 } grid;
 
 unsigned long lrand()
@@ -40,8 +42,8 @@ grid *build_grid(int width, int height)
         return NULL;
     }
     new->grid = calloc(sizeof(char), width * height);
-
-    if (!new->grid)
+    new->white_cells = calloc(sizeof(int), width * height);
+    if (!new->grid || new->white_cells)
     {
         printf("Failed allocating new grid \n");
         return NULL;
@@ -58,7 +60,7 @@ int main()
     int res;
     grid *grid1 = build_grid(100, 100);
     char *upscaled_grid;
-    int times = 6;
+    int times = 8;
     fill_grid_with_LFSR(grid1->grid, grid1->width, grid1->height, 0xFFAA465AF);
     /*
     grid1->grid[(20) * grid1->width + 85 + 1] = 1;
@@ -72,9 +74,11 @@ int main()
     while (counter < 10020)
     {
         counter++;
-        printf("%i\n",counter);
-        upscaled_grid = upscale(grid1->grid, grid1->width, grid1->height, times);
-        free(upscaled_grid);
+        printf("%i\n", counter);
+
+        //upscaled_grid = upscale(grid1->grid, grid1->width, grid1->height, times);
+        //save_gray_frame(upscaled_grid, grid1->width * times, grid1->height * times);
+        //free(upscaled_grid);
 
         res = update_grid(grid1);
 
@@ -86,22 +90,14 @@ int main()
     }
     free_grid(grid1);
 }
-void free_grid(grid *g)
-{
-    free(g->grid);
-    free(g);
-}
-int print_white_cells(int *white_cells)
-{
-    for (int i = 0; white_cells[i] != -1; i++)
-    {
-        printf("%i\n", white_cells[i]);
-    }
-}
 
 int update_grid(grid *grid)
 {
+
     char *new_grid = calloc(sizeof(char), grid->width * grid->height);
+    int *white_cells = calloc(sizeof(int), grid->width * grid->height);
+
+    int white_cells_counter = 0;
 
     if (!new_grid)
     {
@@ -111,11 +107,9 @@ int update_grid(grid *grid)
     //loop all cells
     for (int curr_white_cell = 0, limit = grid->width * grid->height; curr_white_cell < limit; curr_white_cell++)
     {
-        if (grid->grid[curr_white_cell] == 0)
+        if (grid->grid[curr_white_cell] != 1)
             continue;
-
         //check if center should be alive
-
         int *borders = get_array_of_neighbours(grid, curr_white_cell);
         if (!borders)
         {
@@ -127,20 +121,29 @@ int update_grid(grid *grid)
 
         for (int i = 0; i < 8; i++)
         {
-            white_cells_counter += grid->grid[borders[i]];
+            if (grid->grid[borders[i]] == 1)
+                white_cells_counter++;
         }
 
         if (white_cells_counter == 2 || white_cells_counter == 3)
+        {
             new_grid[curr_white_cell] = 1;
+            white_cells[white_cells_counter] = curr_white_cell;
+            white_cells_counter++;
+        }
 
         //check if borders should be alive
 
         for (int i = 0; i < 8; i++)
         {
-            if (borders[i] == 1)
+            if (grid->grid[borders[i]] != 0)
                 continue;
 
+            //pixels already calculated are set to two
+            grid->grid[borders[i]] = 2;
+
             white_cells_counter = count_sourranding_white_cells(grid, borders[i]);
+
             if (white_cells_counter == -1)
             {
                 printf("Failed counting white cells\n");
@@ -150,6 +153,8 @@ int update_grid(grid *grid)
             if (white_cells_counter == 3)
             {
                 new_grid[borders[i]] = 1;
+                white_cells[white_cells_counter] = borders[i];
+                white_cells_counter++;
             }
         }
 
@@ -165,7 +170,7 @@ int update_grid(grid *grid)
 
 int count_sourranding_white_cells(grid *grid, int coord)
 {
-    int white_counter = 0;
+    int white_cells_counter = 0;
 
     int *borders = get_array_of_neighbours(grid, coord);
     if (!borders)
@@ -176,12 +181,13 @@ int count_sourranding_white_cells(grid *grid, int coord)
 
     for (int i = 0; i < 8; i++)
     {
-        white_counter += grid->grid[borders[i]];
+        if (grid->grid[borders[i]] == 1)
+            white_cells_counter++;
     }
 
     free(borders);
 
-    return white_counter;
+    return white_cells_counter;
 }
 
 //returns array of size 8
@@ -226,4 +232,10 @@ int *get_array_of_neighbours(grid *grid, int coord)
     borders[2] = toprig;
 
     return borders;
+}
+
+void free_grid(grid *g)
+{
+    free(g->grid);
+    free(g);
 }

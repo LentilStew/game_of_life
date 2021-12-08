@@ -1,4 +1,4 @@
-gcc -pthread display.c seed.c main.c -o compiled.out -g3 -fsanitize=address
+gcc -pthread display.c seed.c main.c -o compiled.out -g3
 
 ./compiled.out
 

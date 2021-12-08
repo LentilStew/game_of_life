@@ -57,7 +57,7 @@ typedef struct _upscale_params
     int times;
 } _upscale_params;
 
-void _upscale(void *params);
+void *_upscale(void *params);
 
 #define THREADS 1
 pthread_t threads[THREADS];
@@ -71,16 +71,16 @@ char *upscale_th(char *grid, int in_width, int in_height, int times)
     {
 
         params[th] = malloc(sizeof(_upscale_params));
-        
+
         //calculate new height
         params[th]->in_height = in_height / THREADS;
-        
+
         params[th]->in_width = in_width;
         params[th]->times = times;
-        
+
         //calculate start of the old grid
         params[th]->old_grid = grid + in_height / THREADS * th * in_width;
-        
+
         //calculate start of the new grid
         params[th]->new_grid = new_grid + in_height / THREADS * th * times * in_width * times;
 
@@ -95,7 +95,7 @@ char *upscale_th(char *grid, int in_width, int in_height, int times)
     return new_grid;
 }
 
-void _upscale(void *params)
+void *_upscale(void *params)
 {
     _upscale_params *in = (_upscale_params *)params;
 
