@@ -1,12 +1,36 @@
 #include "stdio.h"
 #include "stdlib.h"
-#include "display.h"
 #include "memory.h"
 #include <pthread.h>
+#include "game_utils.h"
+
+void draw_square(char *grid, int grid_width, int grid_height, int x, int y, int side_len);
+void printBits(__uint64_t num);
+
+//source https://youtu.be/Ks1pw1X22y4?t=518
+void fill_grid_with_LFSR(char *grid, int width, int height, __uint64_t seed)
+{
+
+    for (int i = 0, limit = width * height; i < limit; i++)
+    {
+        __uint64_t newbit = (seed ^ (seed >> 1)) & 1;
+        seed = (seed >> 1) | (newbit << 63);
+        //print_bits(seed);
+        grid[i] = newbit;
+    }
+}
+//source https://stackoverflow.com/questions/9280654/c-printing-bits
+void print_bits(__uint64_t num)
+{
+    for (int bit = 0; bit < (sizeof(__uint64_t) * 8); bit++)
+    {
+        printf("%li ", num & 0x01);
+        num = num >> 1;
+    }
+    putchar('\n');
+}
 
 int counter = 0;
-void draw_square(char *grid, int grid_width, int grid_height, int x, int y, int side_len);
-
 void save_gray_frame(unsigned char *buf, int width, int height)
 {
     FILE *f;
@@ -21,16 +45,15 @@ void save_gray_frame(unsigned char *buf, int width, int height)
     f = fopen(filename, "w");
 
     fprintf(f, "P5\n%d %d\n%d\n", width, height, 1);
-
-    //printf("Saving file %s\n", filename);
+    printf("Saving file %s\n", filename);
     fwrite(buf, 1, width * height, f);
 
     fclose(f);
 }
 
-char *upscale(char *grid, int in_width, int in_height, int times)
+void upscale(char *grid, char *new_grid, int in_width, int in_height, int times)
 {
-    char *new_grid = calloc(sizeof(char), in_width * times * in_height * times);
+    memset(new_grid, 0, in_width * times * in_height * times);
 
     int out_width = in_width * times;
     int out_height = in_height * times;
@@ -45,7 +68,6 @@ char *upscale(char *grid, int in_width, int in_height, int times)
         }
     }
 
-    return new_grid;
 }
 
 typedef struct _upscale_params
@@ -121,7 +143,19 @@ void draw_square(char *grid, int grid_width, int grid_height, int x, int y, int 
     for (int i = 0; i < side_len; i++)
     {
         memset(start + i * grid_width,
-               0b1,
+               0xFF,
                side_len);
     }
+}
+
+unsigned long lrand()
+{
+    unsigned long r = 0;
+
+    for (int i = 0; i < 5; ++i)
+    {
+        r = (r << 15) | (rand() & 0x7FFF);
+    }
+
+    return r & 0xFFFFFFFFUL;
 }

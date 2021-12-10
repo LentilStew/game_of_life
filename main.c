@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "display.h"
 #include <unistd.h>
-#include "seed.h"
+#include "game_utils.h"
+#include "video.h"
 
 typedef struct grid
 {
@@ -13,18 +13,6 @@ typedef struct grid
     int white_cells_len;
 } grid;
 
-unsigned long lrand()
-{
-    unsigned long r = 0;
-
-    for (int i = 0; i < 5; ++i)
-    {
-        r = (r << 15) | (rand() & 0x7FFF);
-    }
-
-    return r & 0xFFFFFFFFUL;
-}
-
 void fill_white_cells(grid *grid);
 int *get_array_of_neighbours(grid *grid, int coord);
 int count_sourranding_white_cells(grid *grid, int coord);
@@ -32,58 +20,50 @@ int update_grid(grid *grid);
 grid *build_grid(int width, int height);
 void free_grid(grid *g);
 
-grid *build_grid(int width, int height)
-{
-    grid *new = malloc(sizeof(grid));
-
-    if (!new)
-    {
-        printf("Failed allocating new grid \n");
-        return NULL;
-    }
-    new->grid = calloc(sizeof(char), width * height);
-    new->white_cells = calloc(sizeof(int), width * height);
-    if (!new->grid || !new->white_cells)
-    {
-        printf("Failed allocating new grid \n");
-        return NULL;
-    }
-
-    new->height = height;
-    new->width = width;
-
-    return new;
-}
 int main()
 {
+    //params
+    const char *codec = "h264_nvenc";
+    const char *output_file = "game_of_life.mp4";
+    int framerate = 30;
+    long int seed = 13213;
+    int width = 1920;
+    int height = 1080;
+    int times = 1;
+    int out_width = width * times;
+    int out_height = height * times;
+    //params
 
     int res;
-    grid *grid1 = build_grid(100, 100);
+
+    grid *grid = build_grid(width, height);
     char *upscaled_grid;
-    int times = 5;
-    fill_grid_with_LFSR(grid1->grid, grid1->width, grid1->height, 0xFFAA465AF);
-    fill_white_cells(grid1);
 
-    /*
-    grid1->grid[(20) * grid1->width + 85 + 1] = 1;
-    grid1->grid[(20 + 1) * grid1->width + 85] = 1;
-    grid1->grid[(20 + 1) * grid1->width + 85 + 1] = 1;
-    grid1->grid[(20 + 2) * grid1->width + 85 + 1] = 1;
-    grid1->grid[(20) * grid1->width + 85 + 2] = 1;
-*/
+    fill_grid_with_LFSR(grid->grid, width, height, seed);
 
-    int counter = 0;
+    fill_white_cells(grid);
+    
+    video_encoder *ve = create_video_encoder(out_width, out_height, AV_PIX_FMT_YUV444P,
+                                             45000000, (AVRational){framerate, 1},
+                                             output_file, codec);
 
-    while (counter < 10020)
+    int frame_number = 0;
+
+    while (frame_number++ < 12000)
     {
-        counter++;
-        printf("%i\n", counter);
 
-        upscaled_grid = upscale_th(grid1->grid, grid1->width, grid1->height, times);
-        save_gray_frame(upscaled_grid, grid1->width, grid1->height);
-        free(upscaled_grid);
+        res = av_frame_make_writable(ve->frame);
+        if (res < 0)
+        {
+            return 1;
+        }
 
-        res = update_grid(grid1);
+        upscale(grid->grid, ve->frame->data[0], width, height, times);
+
+        ve->frame->pts = frame_number;
+        encode(ve);
+
+        res = update_grid(grid);
 
         if (res != 0)
         {
@@ -91,7 +71,9 @@ int main()
             return 1;
         }
     }
-    free_grid(grid1);
+
+    free_grid(grid);
+    end_video_encoder(ve);
 }
 
 int update_grid(grid *grid)
@@ -213,6 +195,7 @@ int count_sourranding_white_cells(grid *grid, int coord)
 //returns array of size 8
 int *get_array_of_neighbours(grid *grid, int coord)
 {
+
     int *borders = malloc(sizeof(int) * 8);
     if (!borders)
     {
@@ -220,7 +203,7 @@ int *get_array_of_neighbours(grid *grid, int coord)
         return NULL;
     }
     //top coord
-    int top = (coord < grid->width) ? (grid->height * (grid->width - 1)) + coord : coord - grid->width;
+    int top = (coord < grid->width) ? (grid->width * (grid->height - 1)) + coord : coord - grid->width;
     borders[1] = top;
 
     //bottom coord
@@ -257,5 +240,28 @@ int *get_array_of_neighbours(grid *grid, int coord)
 void free_grid(grid *g)
 {
     free(g->grid);
+    free(g->white_cells);
     free(g);
+}
+grid *build_grid(int width, int height)
+{
+    grid *new = malloc(sizeof(grid));
+
+    if (!new)
+    {
+        printf("Failed allocating new grid \n");
+        return NULL;
+    }
+    new->grid = calloc(sizeof(char), width * height);
+    new->white_cells = calloc(sizeof(int), width * height);
+    if (!new->grid || !new->white_cells)
+    {
+        printf("Failed allocating new grid \n");
+        return NULL;
+    }
+
+    new->height = height;
+    new->width = width;
+
+    return new;
 }

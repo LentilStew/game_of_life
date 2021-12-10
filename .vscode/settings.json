@@ -4,6 +4,8 @@
         "timestamp.h": "c",
         "opt.h": "c",
         "pixdesc.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "random": "c",
+        "game_utils.h": "c"
     }
 }
