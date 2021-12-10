@@ -1,6 +1,6 @@
 # Conway's Game of Life
 
-![EXAMPLE](https://youtu.be/Jg5F3SgtHzs)
+[EXAMPLE](https://youtu.be/Jg5F3SgtHzs)
 
 <h2>Params</h2>
 
