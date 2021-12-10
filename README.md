@@ -2,6 +2,8 @@
 
 ![game_of_life](https://user-images.githubusercontent.com/52719903/145503556-76cc1712-fa6b-4179-b2a5-56bb3eea10b9.gif)
 
+[![game_of_life](https://www.youtube.com/watch?v=Jg5F3SgtHzs)](https://www.youtube.com/watch?v=ek1j272iAmc)
+
 <h2>Params</h2>
 
   -  **codec:** h264_nvenc.
@@ -24,4 +26,4 @@
 To generate seeds I use a LFSR (linear-feedback shift register).
 
 <h2>License</h2>
-game_of_life uses the MIT license. See [LICENSE](https://github.com/LentilStew/game_of_life/blob/main/LICENSE) for more details.
+game_of_life uses the MIT license. See [!LICENSE](https://github.com/LentilStew/game_of_life/blob/main/LICENSE) for more details.
