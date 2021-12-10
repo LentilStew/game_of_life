@@ -1,6 +1,6 @@
 # Conway's Game of Life
 
-<img src="https://user-images.githubusercontent.com/52719903/145506720-8fab0170-1fa7-44ed-b9a1-ae7080690937.gif" alt="game of life" width="75%" />
+[EXAMPLE](https://youtu.be/Jg5F3SgtHzs)
 
 <h2>Params</h2>
 
@@ -25,3 +25,7 @@ To generate seeds I use a LFSR (linear-feedback shift register).
 
 <h2>License</h2>
 game_of_life uses the MIT license. See <a href="https://github.com/LentilStew/game_of_life/blob/main/LICENSE" target="_top">LICENSE</a> for more details.
+
+
+
+
