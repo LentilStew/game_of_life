@@ -2,7 +2,7 @@
 
 ![EXAMPLE game of life](https://youtu.be/Jg5F3SgtHzs)
 
-![EXAMPLE day and night](https://youtu.be/Jg5F3SgtHzs)
+![EXAMPLE day and night](https://www.youtube.com/watch?v=Th707bRN0UQ)
 
 <h2>Params</h2>
 
