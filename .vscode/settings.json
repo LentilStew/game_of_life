@@ -6,6 +6,9 @@
         "pixdesc.h": "c",
         "stdint.h": "c",
         "random": "c",
-        "game_utils.h": "c"
+        "game_utils.h": "c",
+        "linked_list.h": "c",
+        "math.h": "c",
+        "stdio.h": "c"
     }
 }

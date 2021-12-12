@@ -128,7 +128,7 @@ video_encoder *create_video_encoder(int width, int height, int pix_fmt, int bitr
     new->codec_ctx->pix_fmt = pix_fmt;
 
     if (codec->id == AV_CODEC_ID_H264)
-        av_opt_set(new->codec_ctx->priv_data, "preset", "fast", 0);
+        av_opt_set(new->codec_ctx->priv_data, "preset", "slow", 0);
 
     /* open it */
     ret = avcodec_open2(new->codec_ctx, codec, NULL);

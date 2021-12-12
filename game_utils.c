@@ -53,7 +53,7 @@ void save_gray_frame(unsigned char *buf, int width, int height)
 
 void upscale(char *grid, char *new_grid, int in_width, int in_height, int times)
 {
-    memset(new_grid, 0, in_width * times * in_height * times);
+    memset(new_grid, 11, in_width * times * in_height * times);
 
     int out_width = in_width * times;
     int out_height = in_height * times;
@@ -67,7 +67,6 @@ void upscale(char *grid, char *new_grid, int in_width, int in_height, int times)
             draw_square(new_grid, out_width, out_height, x, y, times);
         }
     }
-
 }
 
 typedef struct _upscale_params

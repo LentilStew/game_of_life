@@ -19,45 +19,72 @@ int count_sourranding_white_cells(grid *grid, int coord);
 int update_grid(grid *grid);
 grid *build_grid(int width, int height);
 void free_grid(grid *g);
+int dayandnight_white(int white_cells_counter);
+int dayandnight_black(int white_cells_counter);
+int game_of_life_white(int white_cells_counter);
+int game_of_life_black(int white_cells_counter);
+
+enum type
+{
+    GAME_OF_LIFE = 0,
+    DAY_AND_NIGHT
+};
+
+enum type model;
 
 int main()
 {
     //params
-    const char *codec = "h264_nvenc";
+    const char *codec = "libx264";
     const char *output_file = "game_of_life.mp4";
     int framerate = 30;
-    long int seed = 13213;
-    int width = 1920;
-    int height = 1080;
-    int times = 1;
-    int out_width = width * times;
-    int out_height = height * times;
+    int frames = 6000;
+    long int seed = 0xAAFFAFA5135135;
+    int width = 480;
+    int height = 270;
+    int times = 4;
+    int bitrate = 45000000;
+    model = DAY_AND_NIGHT;
     //params
 
     int res;
-
+    int out_width = width * times;
+    int out_height = height * times;
     grid *grid = build_grid(width, height);
     char *upscaled_grid;
 
     fill_grid_with_LFSR(grid->grid, width, height, seed);
 
+    //R-Pentomino
+    /*
+    grid->grid[50 + 50 * grid->width] = 1;
+    grid->grid[50 + 49 * grid->width] = 1;
+    grid->grid[49 + 50 * grid->width] = 1;
+    grid->grid[51 + 50 * grid->width] = 1;
+    grid->grid[51 + 51 * grid->width] = 1;
+    */
+
     fill_white_cells(grid);
-    
+
     video_encoder *ve = create_video_encoder(out_width, out_height, AV_PIX_FMT_YUV444P,
-                                             45000000, (AVRational){framerate, 1},
+                                             bitrate, (AVRational){framerate, 1},
                                              output_file, codec);
 
     int frame_number = 0;
+    //set the background color to blue
+    memset(ve->frame->data[0], 11, ve->frame->linesize[0] * ve->frame->height);
+    memset(ve->frame->data[1], 140, ve->frame->linesize[1] * ve->frame->height);
+    memset(ve->frame->data[2], 119, ve->frame->linesize[2] * ve->frame->height);
 
-    while (frame_number++ < 12000)
+    while (frame_number++ < frames)
     {
-
+        printf("%i\n", frame_number);
         res = av_frame_make_writable(ve->frame);
         if (res < 0)
         {
             return 1;
         }
-
+        
         upscale(grid->grid, ve->frame->data[0], width, height, times);
 
         ve->frame->pts = frame_number;
@@ -110,8 +137,18 @@ int update_grid(grid *grid)
             if (grid->grid[borders[i]] == 1)
                 white_cells_counter++;
         }
+        int res;
+        switch (model)
+        {
+        case GAME_OF_LIFE:
+            res = game_of_life_white(white_cells_counter);
+            break;
+        case DAY_AND_NIGHT:
+            res = dayandnight_white(white_cells_counter);
+            break;
+        }
 
-        if (white_cells_counter == 2 || white_cells_counter == 3)
+        if (res == 0)
         {
             new_grid[curr_white_cell] = 1;
             white_cells[white_cells_len] = curr_white_cell;
@@ -136,7 +173,17 @@ int update_grid(grid *grid)
                 return 1;
             }
 
-            if (white_cells_counter == 3)
+            switch (model)
+            {
+            case GAME_OF_LIFE:
+                res = game_of_life_black(white_cells_counter);
+                break;
+            case DAY_AND_NIGHT:
+                res = dayandnight_black(white_cells_counter);
+                break;
+            }
+
+            if (res == 0)
             {
                 new_grid[borders[i]] = 1;
                 white_cells[white_cells_len] = borders[i];
@@ -157,6 +204,48 @@ int update_grid(grid *grid)
     return 0;
 }
 
+int dayandnight_white(int white_cells_counter)
+{
+    if (white_cells_counter == 3 || white_cells_counter == 4 ||
+        white_cells_counter == 6 || white_cells_counter == 7 ||
+        white_cells_counter == 8)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int dayandnight_black(int white_cells_counter)
+{
+    if (white_cells_counter == 3 || white_cells_counter == 6 ||
+        white_cells_counter == 7 || white_cells_counter == 8)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int game_of_life_white(int white_cells_counter)
+{
+    if (white_cells_counter == 2 || white_cells_counter == 3)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int game_of_life_black(int white_cells_counter)
+{
+    if (white_cells_counter == 3)
+    {
+        return 0;
+    }
+
+    return 1;
+}
 void fill_white_cells(grid *grid)
 {
     grid->white_cells_len = 0;
